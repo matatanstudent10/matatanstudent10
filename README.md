@@ -1,4 +1,4 @@
-# 👋 ¡Hola! Soy **Jhon León**  
+# 👋 ¡Hola! Soy **Jaime León**  
 
 🚀 Técnico en Desarrollo de Software del **Instituto CENSA**  
 🖥️ Desarrollador con experiencia en **Odoo 15 y 17**, creación de módulos, reportes e integraciones.  
