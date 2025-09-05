@@ -1,4 +1,4 @@
-# 👋 ¡Hola! Soy Jhon León  
+# 👋 ¡Hola! Soy Jaime León  
 
 Soy estudiante de ITM apasionado por el desarrollo de software, Odoo y la programación en Python.  
 Me gusta aprender nuevas tecnologías y construir proyectos que resuelvan problemas reales.  
