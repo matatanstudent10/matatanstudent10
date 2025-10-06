@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+
+
+        <!-- Formato 2: Zebra ZT411 - 4x6 pulgadas (102x152mm) -->
+        <!-- <record id="paperformat_zebra_zt411" model="report.paperformat">
+            <field name="name">Zebra ZT411 (4x6 inch / 102x152mm)</field>
+            <field name="default" eval="False"/>
+            <field name="format">custom</field>
+            <field name="page_height">152</field>
+            <field name="page_width">102</field>
+            <field name="orientation">Portrait</field>
+            <field name="margin_top">0</field>
+            <field name="margin_bottom">0</field>
+            <field name="margin_left">0</field>
+            <field name="margin_right">0</field>
+            <field name="header_line" eval="False"/>
+            <field name="header_spacing">0</field>
+            <field name="dpi">300</field>
+        </record> -->
+
+        <!-- Formato 3: Personalizado 8x10cm -->
+        <!-- Reporte alternativo para ZT411 -->
+        <!-- <record id="action_report_zebra_label_zt411" model="ir.actions.report">
+            <field name="name">Etiqueta Zebra (ZT411 4x6")</field>
+            <field name="model">stock.picking</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">label_picking.report_zebra_label_document</field>
+            <field name="report_file">label_picking.report_zebra_label_document</field>
+            <field name="binding_model_id" ref="stock.model_stock_picking"/>
+            <field name="binding_type">report</field>
+            <field name="paperformat_id" ref="paperformat_zebra_label_real"/>
+        </record> -->
+
+        <!-- Reporte alternativo personalizado -->
+        <!-- <record id="action_report_zebra_label_custom" model="ir.actions.report">
+            <field name="name">Etiqueta Zebra (8x10cm Custom)</field>
+            <field name="model">stock.picking</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">label_picking.report_zebra_label_document</field>
+            <field name="report_file">label_picking.report_zebra_label_document</field>
+            <field name="binding_model_id" ref="stock.model_stock_picking"/>
+            <field name="binding_type">report</field>
+            <field name="paperformat_id" ref="paperformat_zebra_label_real"/>
+        </record> -->
+        <!-- <record id="paperformat_label_zebra_custom" model="report.paperformat">
+            <field name="name">Etiqueta Personalizada 8x10cm</field>
+            <field name="default" eval="False"/>
+            <field name="format">custom</field>
+            <field name="page_height">100</field>
+            <field name="page_width">80</field>
+            <field name="orientation">Portrait</field>
+            <field name="margin_top">0</field>
+            <field name="margin_bottom">0</field>
+            <field name="margin_left">0</field>
+            <field name="margin_right">0</field>
+            <field name="header_line" eval="False"/>
+            <field name="header_spacing">0</field>
+            <field name="dpi">203</field>
+        </record> -->
+
+    <!-- ?MELO  -->
+        <!-- Formato 1: Zebra ZD230 - 4x6 pulgadas (102x152mm) -->
+        <record id="paperformat_zebra_label_real" model="report.paperformat">
+            <field name="name">Etiqueta Zebra 104x85</field>
+            <field name="default" eval="False"/>
+            <field name="format">custom</field>
+            <field name="page_width">104</field>
+            <field name="page_height">85</field>
+            <field name="orientation">Portrait</field>
+            <field name="margin_top">0</field>
+            <field name="margin_bottom">0</field>
+            <field name="margin_left">0</field>
+            <field name="margin_right">0</field>
+            <field name="header_line" eval="False"/>
+            <field name="header_spacing">0</field>
+            <field name="dpi">203</field>
+        </record>
+<!-- ?___________________________________________________________________ -->
+        <!-- Reporte usando ZD230 por defecto -->
+        <record id="action_report_zebra_label" model="ir.actions.report">
+            <field name="name">Etiqueta Zebra (8x10")</field>
+            <field name="model">stock.picking</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">label_picking.report_zebra_label_document</field>
+            <field name="report_file">label_picking.report_zebra_label_document</field>
+            <field name="binding_model_id" ref="stock.model_stock_picking"/>
+            <field name="binding_type">report</field>
+            <field name="paperformat_id" ref="paperformat_zebra_label_real"/>
+        </record>
+
+
+        <!-- Template del reporte en formato PDF -->
+        <template id="report_zebra_label_document">
+            <t t-call="web.basic_layout">
+                <t t-foreach="docs" t-as="picking">
+                    <t t-foreach="range(num_packages)" t-as="package_num">
+                        <div class="page" t-att-style="'page-break-after: always;' if package_num &lt; (num_packages - 1) else ''">
+                            <style>
+                                @page {
+                                    margin: 0;
+                                    padding: 0;
+                                }
+                                body {
+                                    margin: 0;
+                                    padding: 0;
+                                    font-family: 'Arial Black', Arial, sans-serif;
+                                }
+                            </style>
+
+                            <!-- CONTENEDOR PRINCIPAL -->
+                            <div style="width:100%;height:215mm;display:flex;
+                                    flex-direction:column;justify-content:space-between;
+                                    border:4px solid black;padding:0;
+                                    box-sizing:border-box;font-family:'Arial Black',Arial,sans-serif;overflow:hidden;">
+
+                                <!-- HEADER: PEDIDO Y PAQUETE con fondo gris -->
+                                <div style="background-color:#e8e8e8;padding:3mm;border-bottom:4px solid black;display:flex;align-items:flex-start;width:100%;justify-content:center;position:relative;box-sizing:border-box;">
+                                    <div style="text-align:center;">
+                                        <div style="font-size:16pt;font-weight:900;color:#333;">PEDIDO</div>
+                                        <div style="font-size:32pt;font-weight:900;">
+                                            <t t-esc="picking.origin or picking.name"/>
+                                        </div>
+                                    </div>
+                                    <div style="position:absolute;right:3mm;top:3mm;">
+                                        <div style="border:3px solid black;padding:1.5mm;background-color:white;">
+                                            <div style="font-size:14pt;font-weight:900;text-align:center;color:#333;">PAQUETE</div>
+                                            <div style="font-size:20pt;font-weight:900;text-align:center;">
+                                                <t t-esc="package_num + 1"/> / <t t-esc="num_packages"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- CUERPO CON LÍNEAS DIVISORIAS -->
+                                <div style="flex:1;display:table;width:100%;border-spacing:0;">
+                                    <!-- COLUMNA IZQUIERDA -->
+                                    <div style="display:table-cell;width:50%;vertical-align:top;padding:4mm;border-right:3px solid #ccc;">
+                                        <div style="margin-bottom:5mm;padding-bottom:3mm;border-bottom:2px solid #d0d0d0;">
+                                            <div style="font-size:15pt;font-weight:900;color:#444;text-transform:uppercase;">CLIENTE</div>
+                                            <div style="font-size:20pt;margin-top:1mm;font-weight:900;">
+                                                <t t-esc="picking.sale_order_id.partner_shipping_id.display_name"/>
+                                            </div>
+                                        </div>
+                                        <div style="margin-bottom:5mm;padding-bottom:3mm;border-bottom:2px solid #d0d0d0;">
+                                            <div style="font-size:15pt;font-weight:900;color:#444;text-transform:uppercase;">DIRECCIÓN</div>
+                                            <div style="font-size:20pt;margin-top:1mm;font-weight:900;">
+                                                <t t-esc="picking.partner_id.street or ''"/>
+                                            </div>
+                                        </div>
+                                        <div style="margin-bottom:5mm;padding-bottom:3mm;border-bottom:2px solid #d0d0d0;">
+                                            <div style="font-size:15pt;font-weight:900;color:#444;text-transform:uppercase;">VENDEDOR</div>
+                                            <div style="font-size:20pt;margin-top:1mm;font-weight:900;">
+                                                <t t-esc="picking.sale_id.user_id.name if picking.sale_id and picking.sale_id.user_id else 'N/A'"/>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div style="font-size:15pt;font-weight:900;color:#444;text-transform:uppercase;">TIPO DE ENTREGA</div>
+                                            <div style="font-size:20pt;margin-top:1mm;font-weight:900;">
+                                                <t t-esc="'[' + picking.delivery_type_id.code + ']' + ' - ' + picking.delivery_type_id.name"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- COLUMNA DERECHA -->
+                                    <div style="display:table-cell;width:50%;vertical-align:top;padding:4mm;">
+                                        <div style="margin-bottom:5mm;padding-bottom:3mm;border-bottom:2px solid #d0d0d0;">
+                                            <div style="font-size:15pt;font-weight:900;color:#444;text-transform:uppercase;">FECHA PICK</div>
+                                            <div style="font-size:20pt;margin-top:1mm;font-weight:900;">
+                                                <t t-esc="picking.scheduled_date.strftime('%d-%m-%Y %H:%M') if picking.scheduled_date else ''"/>
+                                            </div>
+                                        </div>
+                                        <div style="margin-bottom:5mm;padding-bottom:3mm;border-bottom:2px solid #d0d0d0;">
+                                            <div style="font-size:15pt;font-weight:900;color:#444;text-transform:uppercase;">RESPONSABLE PICK</div>
+                                            <div style="font-size:20pt;margin-top:1mm;font-weight:900;">
+                                                <t t-esc="picking.user_id.name if picking.user_id else 'Sin asignar'"/>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div style="font-size:15pt;font-weight:900;color:#444;text-transform:uppercase;">UBICACIÓN ALMACÉN</div>
+                                            <div style="font-size:20pt;margin-top:1mm;font-weight:900;">
+                                                <t t-esc="picking.ubicacion_id.name"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- FOOTER con código de barras más grande y más abajo -->
+                                <div style="background-color:#e8e8e8;padding:3mm;border-top:4px solid black;box-sizing:border-box;">
+                                    <div style="background-color:white;border:3px solid black;padding:4mm;display:table;width:100%;border-spacing:0;margin-top:3mm;">
+                                        <!-- Código de barras a la izquierda -->
+                                        <div style="display:table-cell;width:65%;vertical-align:middle;text-align:center;padding-right:3mm;">
+                                            <t t-if="picking.name">
+                                                <img t-att-src="'/report/barcode/?type=Code128&amp;value=' + picking.name + '&amp;width=1200&amp;height=300&amp;humanreadable=1&amp;quiet=1'"
+                                                    style="height:40mm;width:auto;image-rendering:crisp-edges;"
+                                                    alt="Barcode"/>
+                                            </t>
+                                        </div>
+                                        <!-- Unidades totales a la derecha -->
+                                        <div style="display:table-cell;width:35%;vertical-align:middle;text-align:center;border-left:3px solid #ccc;padding-left:3mm;">
+                                            <div style="font-size:14pt;font-weight:900;color:#444;">UNIDADES TOTALES</div>
+                                            <div style="font-size:36pt;font-weight:900;line-height:1.1;">
+                                                <t t-esc="num_packages"/>
+                                            </div>
+                                            <div style="font-size:22pt;font-weight:900;">
+                                                PAQUETES
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </t>
+                </t>
+            </t>
+        </template>
+
+    </data>
+</odoo>

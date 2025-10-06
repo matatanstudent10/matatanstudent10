@@ -1,0 +1,26 @@
+<odoo>
+  <data>
+    <!-- Vista heredada de stock.picking para ocultar botón original y agregar nuevo botón -->
+    <record id="view_picking_form_inherit_zebra_label" model="ir.ui.view">
+      <field name="name">stock.picking.form.inherit.zebra.label</field>
+      <field name="model">stock.picking</field>
+      <field name="inherit_id" ref="stock.view_picking_form"/>
+      <field name="arch" type="xml">
+        <!-- Ocultar el botón action_open_label_layout original -->
+        <xpath expr="//button[@name='action_open_label_layout']" position="attributes">
+          <attribute name="invisible">1</attribute>
+        </xpath>
+
+        <!-- Agregar nuevo botón para imprimir etiquetas Zebra -->
+        <xpath expr="//button[@name='action_open_label_layout']" position="after">
+          <field name="picking_sequence_code" invisible="1"/>
+          <button name="action_print_zebra_label"
+                  string="Imprimir Etiquetas Zebra"
+                  type="object"
+                  class="btn-primary"
+                  attrs="{'invisible': ['|', ('state', 'not in', ['assigned', 'done']), ('picking_sequence_code', '!=', 'PICK')]}"/>
+        </xpath>
+      </field>
+    </record>
+  </data>
+</odoo>
