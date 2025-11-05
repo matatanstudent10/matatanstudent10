@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Vista heredada para agregar gestión de envío de cheques -->
+        <record id="view_supplier_payment_receipt_form_delivery" model="ir.ui.view">
+            <field name="name">supplier.payment.receipt.form.delivery</field>
+            <field name="model">supplier.payment.receipt</field>
+            <field name="inherit_id" ref="supplier_payment_receipts.view_supplier_payment_receipt_form"/>
+            <field name="arch" type="xml">
+
+                <!-- Campos invisibles para detectar tareas -->
+                <xpath expr="//field[@name='state']" position="after">
+                    <field name="active_payment_task_id" invisible="1"/>
+                    <field name="any_payment_task_id" invisible="1"/>
+                </xpath>
+
+                <!-- Agregar botones en el header para gestionar envío -->
+                <xpath expr="//field[@name='state']" position="after">
+                    <button name="action_open_payment_task"
+                            string="Envío de Cheque"
+                            type="object"
+                            class="btn-primary"
+                            icon="fa-truck"
+                            attrs="{'invisible': [('any_payment_task_id', '!=', False)]}"
+                            help="Crear la tarea de envío de este cheque"/>
+
+                    <button name="action_open_payment_task"
+                            string="Ver Envío"
+                            type="object"
+                            class="btn-primary"
+                            icon="fa-eye"
+                            attrs="{'invisible': [('any_payment_task_id', '=', False)]}"
+                            help="Ver detalles del envío"/>
+                </xpath>
+
+                <!-- Agregar pestaña de Comprobante de Entrega -->
+                <xpath expr="//page[last()]" position="after">
+                    <page string="Comprobante de Entrega" name="delivery_proof">
+                        <group>
+                            <field name="prueba_de_entrega_attachment_id" readonly="1"/>
+                        </group>
+                    </page>
+                </xpath>
+
+            </field>
+        </record>
+
+    </data>
+</odoo>

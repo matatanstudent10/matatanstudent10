@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <!-- Proveedores de Demo -->
+        <record id="demo_supplier_1" model="res.partner">
+            <field name="name">Transportes Rápidos S.A.</field>
+            <field name="email">supplier1@demo.com</field>
+            <field name="phone">555-0001</field>
+            <field name="is_company">True</field>
+            <field name="supplier_rank">1</field>
+        </record>
+
+        <record id="demo_supplier_2" model="res.partner">
+            <field name="name">Logística Express Ltda.</field>
+            <field name="email">supplier2@demo.com</field>
+            <field name="phone">555-0002</field>
+            <field name="is_company">True</field>
+            <field name="supplier_rank">1</field>
+        </record>
+
+        <record id="demo_supplier_3" model="res.partner">
+            <field name="name">Mensajería Premium Colombia</field>
+            <field name="email">supplier3@demo.com</field>
+            <field name="phone">555-0003</field>
+            <field name="is_company">True</field>
+            <field name="supplier_rank">1</field>
+        </record>
+
+        <!-- Usuarios del Portal (Mensajeros) -->
+        <record id="demo_portal_user_1" model="res.partner">
+            <field name="name">Juan García - Mensajero</field>
+            <field name="email">juan.garcia@empaquetadurasyempaques.com</field>
+            <field name="phone">555-1001</field>
+        </record>
+
+        <record id="demo_user_1" model="res.users">
+            <field name="name">Juan García</field>
+            <field name="login">juan.garcia</field>
+            <field name="email">juan.garcia@empaquetadurasyempaques.com</field>
+            <field name="partner_id" ref="demo_portal_user_1"/>
+            <field name="groups_id" eval="[(4, ref('delivery_expenses.group_payment_user'))]"/>
+        </record>
+
+        <record id="demo_portal_user_2" model="res.partner">
+            <field name="name">María López - Mensajera</field>
+            <field name="email">maria.lopez@empaquetadurasyempaques.com</field>
+            <field name="phone">555-1002</field>
+        </record>
+
+        <record id="demo_user_2" model="res.users">
+            <field name="name">María López</field>
+            <field name="login">maria.lopez</field>
+            <field name="email">maria.lopez@empaquetadurasyempaques.com</field>
+            <field name="partner_id" ref="demo_portal_user_2"/>
+            <field name="groups_id" eval="[(4, ref('delivery_expenses.group_payment_user'))]"/>
+        </record>
+
+        <record id="demo_portal_user_3" model="res.partner">
+            <field name="name">Carlos Rodríguez - Mensajero</field>
+            <field name="email">carlos.rodriguez@empaquetadurasyempaques.com</field>
+            <field name="phone">555-1003</field>
+        </record>
+
+        <record id="demo_user_3" model="res.users">
+            <field name="name">Carlos Rodríguez</field>
+            <field name="login">carlos.rodriguez</field>
+            <field name="email">carlos.rodriguez@empaquetadurasyempaques.com</field>
+            <field name="partner_id" ref="demo_portal_user_3"/>
+            <field name="groups_id" eval="[(4, ref('delivery_expenses.group_payment_user'))]"/>
+        </record>
+
+        <!-- Recibos de Pago de Demo -->
+        <!-- Recibo 1: Pendiente (estado draft, fecha reciente) -->
+        <record id="demo_receipt_1" model="supplier.payment.receipt">
+            <field name="partner_id" ref="demo_supplier_1"/>
+            <field name="date" eval="context_today()"/>
+            <field name="journal_id" ref="account.bank_journal_usd" />
+            <field name="amount_total">5000.00</field>
+            <field name="currency_id" ref="base.USD"/>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="memo">Servicios de transporte y logística - Octubre 2025</field>
+        </record>
+
+        <!-- Recibo 2: Activo (fecha anterior - simula tarea pendiente) -->
+        <record id="demo_receipt_2" model="supplier.payment.receipt">
+            <field name="partner_id" ref="demo_supplier_2"/>
+            <field name="date" eval="(context_today() - datetime.timedelta(days=5)).strftime('%Y-%m-%d')"/>
+            <field name="journal_id" ref="account.bank_journal_usd" />
+            <field name="amount_total">3500.50</field>
+            <field name="currency_id" ref="base.USD"/>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="memo">Servicios de entrega Q4 - Factura INV-2025-001</field>
+        </record>
+
+        <!-- Recibo 3: Vencido (fecha antigua - simula tarea vencida) -->
+        <record id="demo_receipt_3" model="supplier.payment.receipt">
+            <field name="partner_id" ref="demo_supplier_3"/>
+            <field name="date" eval="(context_today() - datetime.timedelta(days=15)).strftime('%Y-%m-%d')"/>
+            <field name="journal_id" ref="account.bank_journal_usd" />
+            <field name="amount_total">8750.00</field>
+            <field name="currency_id" ref="base.USD"/>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="memo">Servicios de mensajería premium - Múltiples envíos</field>
+        </record>
+
+        <!-- Recibo 4: Para probar estado completado -->
+        <record id="demo_receipt_4" model="supplier.payment.receipt">
+            <field name="partner_id" ref="demo_supplier_1"/>
+            <field name="date" eval="(context_today() - datetime.timedelta(days=3)).strftime('%Y-%m-%d')"/>
+            <field name="journal_id" ref="account.bank_journal_usd" />
+            <field name="amount_total">2200.00</field>
+            <field name="currency_id" ref="base.USD"/>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="memo">Envío de retorno - Factura INV-2025-045</field>
+        </record>
+
+        <!-- Tareas de Pago de Demo -->
+        <!-- Tarea 1: Tarea Pendiente - asignada a Juan García -->
+        <record id="demo_task_1" model="delivery_expenses.payment_task">
+            <field name="payment_receipt_id" ref="demo_receipt_1"/>
+            <field name="assigned_user_id" ref="demo_portal_user_1"/>
+            <field name="deadline" eval="(context_today() + datetime.timedelta(days=3)).strftime('%Y-%m-%d')"/>
+            <field name="state">draft</field>
+        </record>
+
+        <!-- Tarea 2: Tarea En Progreso - asignada a María López -->
+        <record id="demo_task_2" model="delivery_expenses.payment_task">
+            <field name="payment_receipt_id" ref="demo_receipt_2"/>
+            <field name="assigned_user_id" ref="demo_portal_user_2"/>
+            <field name="deadline" eval="(context_today() + datetime.timedelta(days=1)).strftime('%Y-%m-%d')"/>
+            <field name="state">in_progress</field>
+            <field name="assigned_date" eval="(context_today() - datetime.timedelta(days=2)).strftime('%Y-%m-%d %H:%M:%S')"/>
+        </record>
+
+        <!-- Tarea 3: Tarea Vencida - asignada a Carlos Rodríguez -->
+        <record id="demo_task_3" model="delivery_expenses.payment_task">
+            <field name="payment_receipt_id" ref="demo_receipt_3"/>
+            <field name="assigned_user_id" ref="demo_portal_user_3"/>
+            <field name="deadline" eval="(context_today() - datetime.timedelta(days=2)).strftime('%Y-%m-%d')"/>
+            <field name="state">in_progress</field>
+            <field name="assigned_date" eval="(context_today() - datetime.timedelta(days=10)).strftime('%Y-%m-%d %H:%M:%S')"/>
+        </record>
+
+        <!-- Tarea 4: Tarea Completada - asignada a Juan García -->
+        <record id="demo_task_4" model="delivery_expenses.payment_task">
+            <field name="payment_receipt_id" ref="demo_receipt_4"/>
+            <field name="assigned_user_id" ref="demo_portal_user_1"/>
+            <field name="deadline" eval="(context_today() - datetime.timedelta(days=1)).strftime('%Y-%m-%d')"/>
+            <field name="state">completed</field>
+            <field name="assigned_date" eval="(context_today() - datetime.timedelta(days=5)).strftime('%Y-%m-%d %H:%M:%S')"/>
+            <field name="completed_date" eval="(context_today() - datetime.timedelta(hours=2)).strftime('%Y-%m-%d %H:%M:%S')"/>
+        </record>
+
+    </data>
+</odoo>

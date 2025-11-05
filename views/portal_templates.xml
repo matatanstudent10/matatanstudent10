@@ -1,0 +1,765 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Payment Tasks Portal Page -->
+        <template id="portal_payment_tasks" name="Mis Tareas de Recibo de Pago">
+            <t t-call="portal.portal_layout">
+                <t t-set="breadcrumbs_searchbar" eval="False"/>
+
+                <style>
+                    /* Ocultar breadcrumbs automáticos del portal */
+                    .o_portal_breadcrumbs { display: none !important; }
+                    .page-header { display: none !important; }
+                    .oe_page_title { display: none !important; }
+                    .o_page_title { display: none !important; }
+
+                    /* Ocultar breadcrumbs automáticos manteniendo el custom */
+                    .breadcrumb:not(.o_custom_breadcrumb) { display: none !important; }
+                    div[class*="breadcrumb"] > .breadcrumb:not(.o_custom_breadcrumb) { display: none !important; }
+
+                    /* Deshabilitar botón sin opacidad gris */
+                    .btn:disabled {
+                        opacity: 0.5;
+                        cursor: not-allowed;
+                    }
+                </style>
+
+                <!-- Custom Breadcrumb -->
+                <ol class="breadcrumb mb-4 o_custom_breadcrumb">
+                    <li class="breadcrumb-item"><a href="/my/home">Inicio</a></li>
+                    <li class="breadcrumb-item active">Tareas de Recibo de Pago</li>
+                </ol>
+
+                <!-- Search and Filter Section -->
+                <div class="o_portal_searchbar mb-4">
+                    <h2>Tareas de Recibo de Pago</h2>
+
+                    <!-- Filter Buttons -->
+                    <div class="mb-3">
+                        <a t-attf-href="/my/payment-tasks?filterby=draft_in_progress"
+                           t-attf-class="btn btn-sm #{filterby == 'draft_in_progress' and 'btn-primary active' or 'btn-outline-primary'}">
+                            Pendientes
+                        </a>
+                        <a t-attf-href="/my/payment-tasks?filterby=all"
+                           t-attf-class="btn btn-sm #{filterby == 'all' and 'btn-primary active' or 'btn-outline-primary'}">
+                            Todas
+                        </a>
+                        <a t-attf-href="/my/payment-tasks?filterby=draft"
+                           t-attf-class="btn btn-sm #{filterby == 'draft' and 'btn-primary active' or 'btn-outline-primary'}">
+                            En Borrador
+                        </a>
+                        <a t-attf-href="/my/payment-tasks?filterby=in_progress"
+                           t-attf-class="btn btn-sm #{filterby == 'in_progress' and 'btn-primary active' or 'btn-outline-primary'}">
+                            En Progreso
+                        </a>
+                        <a t-attf-href="/my/payment-tasks?filterby=completed"
+                           t-attf-class="btn btn-sm #{filterby == 'completed' and 'btn-primary active' or 'btn-outline-primary'}">
+                            Completadas
+                        </a>
+                    </div>
+                </div>
+
+                <t t-if="not payment_tasks">
+                    <div class="alert alert-info">
+                        <p>No tienes tareas de recibo de pago pendientes.</p>
+                    </div>
+                </t>
+
+                <t t-if="payment_tasks">
+                    <div class="o_portal_my_documents">
+                        <!-- Kanban View Style Cards -->
+                        <div class="row o_portal_kanban">
+                            <t t-foreach="payment_tasks" t-as="task">
+                                <div class="col-md-6 col-lg-4 o_portal_kanban_card">
+                                    <div class="oe_kanban_card oe_kanban_global_click card"
+                                         t-attf-style="border-left: 5px solid #{task.state == 'completed' and '#52c41a' or task.is_overdue and '#f5222d' or task.state == 'in_progress' and '#1890ff' or '#d9d9d9'}">
+
+                                        <!-- Card Header -->
+                                        <div class="card-header pb-0">
+                                            <h5 class="card-title mb-0">
+                                                <span t-field="task.receipt_name"/>
+                                            </h5>
+                                            <small class="text-muted">
+                                                <span t-field="task.supplier_name"/>
+                                            </small>
+                                        </div>
+
+                                        <!-- Card Body -->
+                                        <div class="card-body pt-2">
+                                            <!-- Receipt Amount -->
+                                            <div class="row mb-2">
+                                                <div class="col-6">
+                                                    <strong>Monto:</strong>
+                                                </div>
+                                                <div class="col-6 text-right">
+                                                    <span t-field="task.receipt_amount"
+                                                          t-options="{'widget': 'monetary', 'display_currency': task.receipt_currency_id}"/>
+                                                </div>
+                                            </div>
+
+                                            <!-- Receipt Date -->
+                                            <div class="row mb-2">
+                                                <div class="col-6">
+                                                    <strong>Fecha del Recibo:</strong>
+                                                </div>
+                                                <div class="col-6 text-right">
+                                                    <span t-field="task.receipt_date"/>
+                                                </div>
+                                            </div>
+
+                                            <!-- Deadline -->
+                                            <div class="row mb-2">
+                                                <div class="col-6">
+                                                    <strong>Fecha Límite:</strong>
+                                                </div>
+                                                <div class="col-6 text-right">
+                                                    <span t-field="task.deadline"
+                                                          t-attf-class="#{task.is_overdue and 'text-danger font-weight-bold' or ''}"/>
+                                                    <t t-if="task.days_remaining > 0">
+                                                        <small class="text-muted">
+                                                            (<t t-esc="task.days_remaining"/> días)
+                                                        </small>
+                                                    </t>
+                                                    <t t-elif="task.is_overdue">
+                                                        <span class="badge badge-danger">VENCIDO</span>
+                                                    </t>
+                                                </div>
+                                            </div>
+
+                                            <!-- Status Badge -->
+                                            <div class="row mb-3">
+                                                <div class="col-12">
+                                                    <span t-attf-class="badge badge-#{task.state == 'completed' and 'success' or task.state == 'cancelled' and 'secondary' or task.state == 'in_progress' and 'primary' or 'warning'}">
+                                                        <t t-esc="task.get_status_label()"/>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Card Footer -->
+                                        <div class="card-footer bg-transparent">
+                                            <a t-attf-href="/my/payment-tasks/#{task.id}"
+                                               class="btn btn-sm btn-primary">
+                                                <i class="fa fa-arrow-right me-1"/> Ver Detalles
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </template>
+
+        <!-- Payment Task Detail Portal Page -->
+        <template id="portal_payment_task_detail" name="Detalles de Tarea de Recibo de Pago">
+            <t t-call="portal.portal_layout">
+                <t t-set="breadcrumbs_searchbar" eval="False"/>
+
+                <style>
+                    /* Ocultar breadcrumbs automáticos del portal */
+                    .o_portal_breadcrumbs { display: none !important; }
+                    .page-header { display: none !important; }
+                    .oe_page_title { display: none !important; }
+                    .o_page_title { display: none !important; }
+
+                    /* Ocultar breadcrumbs automáticos manteniendo el custom */
+                    .breadcrumb:not(.o_custom_breadcrumb) { display: none !important; }
+                    div[class*="breadcrumb"] > .breadcrumb:not(.o_custom_breadcrumb) { display: none !important; }
+
+                    /* Deshabilitar botón sin opacidad gris */
+                    .btn:disabled {
+                        opacity: 0.5;
+                        cursor: not-allowed;
+                    }
+
+                    /* Página de Entrega - Estilos Empresariales Odoo */
+                    .page-title-delivery {
+                        background: linear-gradient(135deg, #1f417e 0%, #155c9f 100%);
+                        color: white;
+                        padding: 40px 30px;
+                        margin: -1rem -15px 30px -15px;
+                        border-radius: 0 0 20px 20px;
+                    }
+
+                    .page-title-delivery .container {
+                        max-width: 100%;
+                        padding: 0 20px;
+                    }
+
+                    .page-title-delivery h1 {
+                        font-size: 2.5rem;
+                        font-weight: 700;
+                        margin: 0 0 10px 0;
+                        text-shadow: 0 2px 4px rgba(0,0,0,0.15);
+                        letter-spacing: -0.5px;
+                    }
+
+                    .page-title-delivery p {
+                        font-weight: 500;
+                        letter-spacing: 0.3px;
+                        margin: 0;
+                    }
+
+                    @media (max-width: 768px) {
+                        .page-title-delivery {
+                            padding: 30px 20px;
+                            margin: -1rem -12px 25px -12px;
+                        }
+
+                        .page-title-delivery h1 {
+                            font-size: 1.8rem;
+                        }
+
+                        .page-title-delivery p {
+                            font-size: 0.95rem;
+                        }
+
+                        .page-title-delivery .container {
+                            padding: 0 15px;
+                        }
+                    }
+
+                    /* Cards empresariales */
+                    .delivery-card {
+                        border: none;
+                        border-radius: 12px;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                        overflow: hidden;
+                        border-top: 4px solid #1f417e;
+                    }
+
+                    .delivery-card:hover {
+                        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+                        transform: translateY(-2px);
+                    }
+
+                    .delivery-card .card-header {
+                        background: linear-gradient(135deg, #1f417e 0%, #155c9f 100%);
+                        color: white;
+                        border: none;
+                        padding: 18px 25px;
+                    }
+
+                    .delivery-card .card-header h5 {
+                        margin: 0;
+                        font-weight: 600;
+                        font-size: 1.1rem;
+                        letter-spacing: 0.3px;
+                    }
+
+                    .delivery-card .card-body {
+                        padding: 25px;
+                    }
+
+                    @media (max-width: 768px) {
+                        .delivery-card .card-body {
+                            padding: 15px;
+                        }
+                    }
+
+                    /* Dropzone empresarial */
+                    .upload-dropzone {
+                        border: 2px dashed #1f417e;
+                        border-radius: 10px;
+                        padding: 35px 20px;
+                        text-align: center;
+                        background: linear-gradient(135deg, rgba(31, 65, 126, 0.03) 0%, rgba(21, 92, 159, 0.03) 100%);
+                        transition: all 0.3s ease;
+                        cursor: pointer;
+                        position: relative;
+                    }
+
+                    .upload-dropzone:hover {
+                        border-color: #155c9f;
+                        background: linear-gradient(135deg, rgba(31, 65, 126, 0.08) 0%, rgba(21, 92, 159, 0.08) 100%);
+                        transform: translateY(-2px);
+                    }
+
+                    .upload-dropzone.drag-over {
+                        border-color: #155c9f;
+                        background: linear-gradient(135deg, rgba(31, 65, 126, 0.12) 0%, rgba(21, 92, 159, 0.12) 100%);
+                        box-shadow: inset 0 0 10px rgba(31, 65, 126, 0.1);
+                    }
+
+                    .upload-dropzone i {
+                        font-size: 3rem;
+                        color: #1f417e;
+                        margin-bottom: 12px;
+                        display: block;
+                    }
+
+                    .upload-dropzone p {
+                        margin: 0;
+                        color: #1f417e;
+                        font-weight: 600;
+                        font-size: 1.05rem;
+                    }
+
+                    .upload-dropzone small {
+                        color: #666;
+                        display: block;
+                        margin-top: 8px;
+                        font-weight: 500;
+                    }
+
+                    @media (max-width: 768px) {
+                        .upload-dropzone {
+                            padding: 25px 15px;
+                        }
+
+                        .upload-dropzone i {
+                            font-size: 2.5rem;
+                        }
+
+                        .upload-dropzone p {
+                            font-size: 0.95rem;
+                        }
+                    }
+
+                    .file-input-wrapper {
+                        position: relative;
+                        overflow: hidden;
+                    }
+
+                    .file-input-wrapper input[type="file"] {
+                        position: absolute;
+                        left: -9999px;
+                    }
+
+                    /* Preview de imagen */
+                    .image-preview-container {
+                        margin-top: 20px;
+                        text-align: center;
+                    }
+
+                    .image-preview-container img {
+                        max-width: 100%;
+                        max-height: 400px;
+                        border-radius: 12px;
+                        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+                    }
+
+                    /* Alerts empresariales */
+                    .alert-success-delivery {
+                        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+                        border: 1px solid #c3e6cb;
+                        color: #155724;
+                        border-radius: 8px;
+                        padding: 12px 16px;
+                        margin-bottom: 20px;
+                    }
+
+                    .alert-success-delivery i {
+                        color: #28a745;
+                        margin-right: 8px;
+                        font-size: 1.1rem;
+                        font-weight: 600;
+                    }
+
+                    .alert-info-delivery {
+                        background: linear-gradient(135deg, #cfe2ff 0%, #b6d4fe 100%);
+                        border: 1px solid #b6d4fe;
+                        color: #084298;
+                        border-radius: 8px;
+                        padding: 12px 16px;
+                        margin-bottom: 20px;
+                    }
+
+                    .alert-info-delivery strong {
+                        font-weight: 700;
+                        color: #1f417e;
+                    }
+
+                    /* Botones empresariales */
+                    .btn-delivery {
+                        border-radius: 8px;
+                        padding: 12px 24px;
+                        font-weight: 700;
+                        transition: all 0.2s ease;
+                        border: none;
+                        box-shadow: 0 2px 8px rgba(31, 65, 126, 0.2);
+                        font-size: 0.95rem;
+                        letter-spacing: 0.3px;
+                    }
+
+                    .btn-delivery:hover:not(:disabled) {
+                        transform: translateY(-1px);
+                        box-shadow: 0 4px 12px rgba(31, 65, 126, 0.3);
+                    }
+
+                    .btn-delivery:active:not(:disabled) {
+                        transform: translateY(0);
+                        box-shadow: 0 2px 6px rgba(31, 65, 126, 0.2);
+                    }
+
+                    .btn-delivery:disabled {
+                        opacity: 0.55;
+                        cursor: not-allowed;
+                    }
+
+                    .btn-success-delivery {
+                        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+                        color: white;
+                    }
+
+                    .btn-success-delivery:hover:not(:disabled) {
+                        background: linear-gradient(135deg, #218838 0%, #1aa179 100%);
+                    }
+
+                    @media (max-width: 768px) {
+                        .btn-delivery {
+                            padding: 10px 18px;
+                            font-size: 0.9rem;
+                        }
+                    }
+
+                    /* Info Section */
+                    .info-section {
+                        background: #f8f9fa;
+                        border-radius: 12px;
+                        padding: 20px;
+                        margin-bottom: 25px;
+                    }
+
+                    .info-row {
+                        display: flex;
+                        justify-content: space-between;
+                        padding: 10px 0;
+                        border-bottom: 1px solid #e0e0e0;
+                    }
+
+                    .info-row:last-child {
+                        border-bottom: none;
+                    }
+
+                    .info-row strong {
+                        color: #667eea;
+                        font-weight: 600;
+                    }
+
+                    /* Loading spinner */
+                    .spinner-border-sm {
+                        width: 1rem;
+                        height: 1rem;
+                    }
+                </style>
+
+                <!-- Custom Breadcrumb -->
+                <ol class="breadcrumb mb-4 o_custom_breadcrumb">
+                    <li class="breadcrumb-item"><a href="/my/home">Inicio</a></li>
+                    <li class="breadcrumb-item"><a href="/my/payment-tasks">Tareas de Recibo de Pago</a></li>
+                    <li class="breadcrumb-item active"><span t-field="payment_task.name"/></li>
+                </ol>
+
+                <!-- Page Title Header -->
+                <div class="page-title-delivery">
+                    <div class="container">
+                        <h1>Documento de Entrega</h1>
+                        <p class="mb-0" style="opacity: 0.9; font-size: 1.1rem;">
+                            <span t-field="payment_task.receipt_name"/> •
+                            <t t-esc="payment_task.get_status_label()"/>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Task Header Info -->
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <div class="info-section">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="info-row">
+                                        <strong>Proveedor:</strong>
+                                        <span t-field="payment_task.supplier_name"/>
+                                    </div>
+                                    <div class="info-row">
+                                        <strong>Monto:</strong>
+                                        <span t-field="payment_task.receipt_amount"
+                                              t-options="{'widget': 'monetary', 'display_currency': payment_task.receipt_currency_id}"/>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-row">
+                                        <strong>Banco:</strong>
+                                        <span t-field="payment_task.bank_name"/>
+                                    </div>
+                                    <div class="info-row">
+                                        <strong>Vencimiento:</strong>
+                                        <t t-if="payment_task.is_overdue">
+                                            <span class="badge badge-danger">VENCIDO</span>
+                                        </t>
+                                        <t t-else="">
+                                            <span t-field="payment_task.deadline"/>
+                                        </t>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Proof of Delivery Section - PREMIUM DESIGN -->
+                <div class="delivery-card mb-5">
+                    <div class="card-header">
+                        <h5>Comprobante de Entrega</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Show upload form only if task is not completed -->
+                        <t t-if="payment_task.state != 'completed'">
+                            <!-- No Proof Yet -->
+                            <t t-if="not payment_task.prueba_de_entrega">
+                                <div class="alert-info-delivery mb-4">
+                                    <strong>Carga una imagen que compruebe la entrega del cheque.</strong>
+                                    <p class="mb-0" style="margin-top: 5px;">Formatos soportados: JPG, PNG • Máximo: 2MB</p>
+                                </div>
+
+                                <!-- File Input (hidden) -->
+                                <input type="file" id="proof_file_input"
+                                       accept="image/jpeg,image/png,image/*"
+                                       capture="environment"
+                                       style="display: none;"/>
+
+                                <!-- Upload Dropzone -->
+                                <div class="file-input-wrapper">
+                                    <div class="upload-dropzone" id="dropzone">
+                                        <i class="fa fa-camera"></i>
+                                        <p>Toma una foto</p>
+                                        <small>o selecciona una imagen</small>
+                                    </div>
+                                </div>
+
+                                <!-- Preview Container (initially hidden) -->
+                                <div id="preview_container" style="display: none; margin-top: 20px;">
+                                    <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
+                                        <p style="margin: 0 0 15px 0; font-weight: 600; color: #1f417e;">Vista previa del archivo:</p>
+                                        <img id="preview_image" style="max-width: 100%; max-height: 300px; border-radius: 8px; margin-bottom: 15px;"/>
+                                        <p id="preview_filename" style="margin: 10px 0; font-size: 0.9rem; color: #666;"></p>
+                                        <div style="display: flex; gap: 10px; margin-top: 15px;">
+                                            <button type="button" id="btn_confirm" class="btn btn-delivery btn-success-delivery" style="flex: 1;">
+                                                <i class="fa fa-check me-2"></i> Confirmar
+                                            </button>
+                                            <button type="button" id="btn_cancel" class="btn btn-delivery" style="flex: 1; background-color: #e9ecef; color: #666;">
+                                                <i class="fa fa-times me-2"></i> Cancelar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Upload Form (hidden) -->
+                                <form id="proof_form" method="post" t-attf-action="/my/payment-tasks/#{payment_task.id}/upload-proof"
+                                      enctype="multipart/form-data" style="display: none;">
+                                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                    <input type="hidden" id="proof_file_hidden" name="proof_file"/>
+                                </form>
+
+                                <script><![CDATA[
+                                    (function() {
+                                        const fileInput = document.getElementById('proof_file_input');
+                                        const dropzone = document.getElementById('dropzone');
+                                        const previewContainer = document.getElementById('preview_container');
+                                        const previewImage = document.getElementById('preview_image');
+                                        const previewFilename = document.getElementById('preview_filename');
+                                        const btnConfirm = document.getElementById('btn_confirm');
+                                        const btnCancel = document.getElementById('btn_cancel');
+                                        const form = document.getElementById('proof_form');
+                                        let selectedFile = null;
+
+                                        // Click dropzone para abrir selector
+                                        dropzone.addEventListener('click', function() {
+                                            fileInput.click();
+                                        });
+
+                                        // Mostrar preview al seleccionar archivo
+                                        fileInput.addEventListener('change', function() {
+                                            if (this.files.length > 0) {
+                                                selectedFile = this.files[0];
+                                                showPreview(selectedFile);
+                                            }
+                                        });
+
+                                        // Drag & drop
+                                        dropzone.addEventListener('dragover', function(e) {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            this.classList.add('drag-over');
+                                        });
+
+                                        dropzone.addEventListener('dragleave', function(e) {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            this.classList.remove('drag-over');
+                                        });
+
+                                        dropzone.addEventListener('drop', function(e) {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            this.classList.remove('drag-over');
+
+                                            if (e.dataTransfer.files.length > 0) {
+                                                selectedFile = e.dataTransfer.files[0];
+                                                fileInput.files = e.dataTransfer.files;
+                                                showPreview(selectedFile);
+                                            }
+                                        });
+
+                                        // Mostrar preview
+                                        function showPreview(file) {
+                                            if (!file.type.startsWith('image/')) {
+                                                alert('Por favor selecciona una imagen válida');
+                                                return;
+                                            }
+
+                                            const reader = new FileReader();
+                                            reader.onload = function(e) {
+                                                previewImage.src = e.target.result;
+                                                previewFilename.textContent = 'Archivo: ' + file.name + ' (' + (file.size / 1024 / 1024).toFixed(2) + ' MB)';
+                                                dropzone.style.display = 'none';
+                                                previewContainer.style.display = 'block';
+                                            };
+                                            reader.readAsDataURL(file);
+                                        }
+
+                                        // Confirmar y subir
+                                        btnConfirm.addEventListener('click', function() {
+                                            if (!selectedFile) {
+                                                alert('No hay archivo seleccionado');
+                                                return;
+                                            }
+
+                                            // Validar tamaño
+                                            if (selectedFile.size > 2 * 1024 * 1024) {
+                                                alert('El archivo supera 2MB');
+                                                return;
+                                            }
+
+                                            // Crear FormData y subir
+                                            const formData = new FormData();
+                                            formData.append('csrf_token', document.querySelector('input[name="csrf_token"]').value);
+                                            formData.append('proof_file', selectedFile);
+
+                                            btnConfirm.disabled = true;
+                                            btnConfirm.innerHTML = '<i class="fa fa-spinner fa-spin me-2"></i> Subiendo...';
+
+                                            fetch(form.action, {
+                                                method: 'POST',
+                                                body: formData
+                                            })
+                                            .then(response => {
+                                                if (response.ok) {
+                                                    location.reload();
+                                                } else {
+                                                    alert('Error al subir el archivo');
+                                                    btnConfirm.disabled = false;
+                                                    btnConfirm.innerHTML = '<i class="fa fa-check me-2"></i> Confirmar';
+                                                }
+                                            })
+                                            .catch(error => {
+                                                console.error('Error:', error);
+                                                alert('Error al subir el archivo');
+                                                btnConfirm.disabled = false;
+                                                btnConfirm.innerHTML = '<i class="fa fa-check me-2"></i> Confirmar';
+                                            });
+                                        });
+
+                                        // Cancelar
+                                        btnCancel.addEventListener('click', function() {
+                                            selectedFile = null;
+                                            fileInput.value = '';
+                                            previewContainer.style.display = 'none';
+                                            dropzone.style.display = 'block';
+                                        });
+                                    })();
+                                ]]></script>
+                            </t>
+
+                            <!-- Proof Uploaded -->
+                            <t t-if="payment_task.prueba_de_entrega">
+                                <div class="alert-success-delivery mb-4">
+                                    <i class="fa fa-check-circle"></i>
+                                    <strong><t t-esc="payment_task.prueba_de_entrega_filename"/></strong> cargado correctamente
+                                </div>
+
+                                <!-- Display image if available -->
+                                <t t-if="payment_task.prueba_de_entrega and payment_task.prueba_de_entrega_filename">
+                                    <div class="image-preview-container">
+                                        <img t-att-src="'/web/image/delivery_expenses.payment_task/' + str(payment_task.id) + '/prueba_de_entrega'"
+                                             alt="Comprobante de entrega"/>
+                                    </div>
+                                </t>
+                            </t>
+                        </t>
+
+                        <!-- Task Completed -->
+                        <t t-if="payment_task.state == 'completed'">
+                            <div class="alert-success-delivery mb-4">
+                                <i class="fa fa-check-circle"></i>
+                                <strong>Entrega completada</strong> • <t t-esc="payment_task.prueba_de_entrega_filename"/>
+                            </div>
+
+                            <t t-if="payment_task.prueba_de_entrega">
+                                <div class="image-preview-container">
+                                    <img t-att-src="'/web/image/delivery_expenses.payment_task/' + str(payment_task.id) + '/prueba_de_entrega'"
+                                         alt="Comprobante de entrega"/>
+                                </div>
+                            </t>
+                        </t>
+                    </div>
+                </div>
+
+                <!-- Action Buttons - PREMIUM DESIGN -->
+                <div class="delivery-card">
+                    <div class="card-body" style="padding: 30px;">
+                        <t t-if="payment_task.state in ['draft', 'in_progress']">
+                            <t t-if="payment_task.prueba_de_entrega">
+                                <!-- Proof uploaded - show confirm button only -->
+                                <form method="post" t-attf-action="/my/payment-tasks/#{payment_task.id}/complete">
+                                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                    <button type="submit" class="btn btn-delivery btn-success-delivery w-100">
+                                        <i class="fa fa-check-circle me-2"></i> Confirmar Entrega
+                                    </button>
+                                </form>
+                            </t>
+
+                            <t t-if="not payment_task.prueba_de_entrega">
+                                <!-- No proof yet - show warning only -->
+                                <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 15px; text-align: center; color: #856404;">
+                                    <i class="fa fa-exclamation-triangle me-2"></i>
+                                    <strong>Carga el comprobante de entrega para continuar</strong>
+                                </div>
+                            </t>
+                        </t>
+
+                        <t t-if="payment_task.state == 'completed'">
+                            <div class="text-center">
+                                <div style="font-size: 3rem; color: #27ae60; margin-bottom: 15px;">
+                                    <i class="fa fa-check-circle"></i>
+                                </div>
+                                <h4 style="color: #27ae60; margin: 0;">Entrega Confirmada</h4>
+                                <p class="text-muted" style="margin-top: 5px;">El comprobante ha sido registrado correctamente</p>
+                                <div style="margin-top: 20px; padding: 15px; background: #d4edda; border-radius: 8px; color: #155724;">
+                                    <i class="fa fa-info-circle me-2"></i>
+                                    <small>Fecha de confirmación: <t t-esc="payment_task.completed_date" t-options="{'widget': 'datetime', 'format': 'short'}"/></small>
+                                </div>
+                            </div>
+                        </t>
+
+                        <t t-if="payment_task.state == 'cancelled'">
+                            <div class="text-center">
+                                <div style="font-size: 3rem; color: #dc3545; margin-bottom: 15px;">
+                                    <i class="fa fa-ban"></i>
+                                </div>
+                                <h4 style="color: #dc3545; margin: 0;">Tarea Cancelada</h4>
+                                <p class="text-muted" style="margin-top: 5px;">Esta tarea ha sido cancelada por el administrador</p>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+
+            </t>
+        </template>
+
+    </data>
+</odoo>
