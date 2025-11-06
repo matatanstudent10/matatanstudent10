@@ -152,10 +152,12 @@ class PaymentTask(models.Model):
             raise ValidationError(error_msg)
 
         try:
-            # Crear attachment SIN vincular a un modelo primero
+            # Crear attachment vinculado al supplier.payment.receipt
             attachment = self.env['ir.attachment'].create({
                 'name': self.prueba_de_entrega_filename or f'Prueba_Entrega_{self.name}.jpg',
                 'datas': self.prueba_de_entrega,
+                'res_model': 'supplier.payment.receipt',
+                'res_id': self.payment_receipt_id.id,
             })
             _logger.info(f'Created attachment: {attachment.name} (ID: {attachment.id})')
 

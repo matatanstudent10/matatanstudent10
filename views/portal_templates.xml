@@ -34,28 +34,37 @@
                 <div class="o_portal_searchbar mb-4">
                     <h2>Tareas de Recibo de Pago</h2>
 
-                    <!-- Filter Buttons -->
-                    <div class="mb-3">
-                        <a t-attf-href="/my/payment-tasks?filterby=draft_in_progress"
-                           t-attf-class="btn btn-sm #{filterby == 'draft_in_progress' and 'btn-primary active' or 'btn-outline-primary'}">
-                            Pendientes
-                        </a>
-                        <a t-attf-href="/my/payment-tasks?filterby=all"
-                           t-attf-class="btn btn-sm #{filterby == 'all' and 'btn-primary active' or 'btn-outline-primary'}">
-                            Todas
-                        </a>
-                        <a t-attf-href="/my/payment-tasks?filterby=draft"
-                           t-attf-class="btn btn-sm #{filterby == 'draft' and 'btn-primary active' or 'btn-outline-primary'}">
-                            En Borrador
-                        </a>
-                        <a t-attf-href="/my/payment-tasks?filterby=in_progress"
-                           t-attf-class="btn btn-sm #{filterby == 'in_progress' and 'btn-primary active' or 'btn-outline-primary'}">
-                            En Progreso
-                        </a>
-                        <a t-attf-href="/my/payment-tasks?filterby=completed"
-                           t-attf-class="btn btn-sm #{filterby == 'completed' and 'btn-primary active' or 'btn-outline-primary'}">
-                            Completadas
-                        </a>
+                    <!-- Filter Buttons and Grouping Dropdown -->
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <!-- Filter Buttons -->
+                            <div>
+                                <a t-attf-href="/my/payment-tasks?filterby=in_progress"
+                                   t-attf-class="btn btn-sm #{filterby == 'in_progress' and 'btn-primary active' or 'btn-outline-primary'}">
+                                    En Progreso
+                                </a>
+                                <a t-attf-href="/my/payment-tasks?filterby=all"
+                                   t-attf-class="btn btn-sm #{filterby == 'all' and 'btn-primary active' or 'btn-outline-primary'}">
+                                    Todas
+                                </a>
+                                <a t-attf-href="/my/payment-tasks?filterby=completed"
+                                   t-attf-class="btn btn-sm #{filterby == 'completed' and 'btn-primary active' or 'btn-outline-primary'}">
+                                    Completadas
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-right">
+                            <!-- Grouping Dropdown -->
+                            <div class="form-group mb-0">
+                                <label for="group_by_select" class="mr-2" style="display: inline-block;">Agrupar por:</label>
+                                <select id="group_by_select" class="form-control" style="display: inline-block; width: auto; max-width: 200px;"
+                                        onchange="window.location.href = '/my/payment-tasks?filterby=' + document.getElementById('filterby_value').value + '&amp;group_by=' + this.value">
+                                    <option value="none" t-att-selected="group_by == 'none' and 'selected'">Ninguno</option>
+                                    <option value="bank" t-att-selected="group_by == 'bank' and 'selected'">Banco</option>
+                                </select>
+                                <input type="hidden" id="filterby_value" t-att-value="filterby"/>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -67,86 +76,187 @@
 
                 <t t-if="payment_tasks">
                     <div class="o_portal_my_documents">
-                        <!-- Kanban View Style Cards -->
-                        <div class="row o_portal_kanban">
-                            <t t-foreach="payment_tasks" t-as="task">
-                                <div class="col-md-6 col-lg-4 o_portal_kanban_card">
-                                    <div class="oe_kanban_card oe_kanban_global_click card"
-                                         t-attf-style="border-left: 5px solid #{task.state == 'completed' and '#52c41a' or task.is_overdue and '#f5222d' or task.state == 'in_progress' and '#1890ff' or '#d9d9d9'}">
+                        <!-- Conditionally show grouped or ungrouped view -->
+                        <t t-if="group_by == 'bank'">
+                            <!-- Group by Bank -->
+                            <t t-foreach="sorted(tasks_by_bank.keys())" t-as="bank_name">
+                                <div class="mb-5">
+                                    <!-- Bank Section Header -->
+                                    <div class="d-flex align-items-center mb-3" style="border-bottom: 3px solid #178236; padding-bottom: 10px;">
+                                        <i class="fa fa-university me-2" style="color: #178236; font-size: 1.3rem;"></i>
+                                        <h4 style="margin: 0; color: #178236; font-weight: 600;">
+                                            <t t-esc="bank_name"/>
+                                        </h4>
+                                        <span class="ms-auto badge badge-info" style="background-color: #178236;">
+                                            <t t-esc="len(tasks_by_bank[bank_name])"/> tareas
+                                        </span>
+                                    </div>
 
-                                        <!-- Card Header -->
-                                        <div class="card-header pb-0">
-                                            <h5 class="card-title mb-0">
-                                                <span t-field="task.receipt_name"/>
-                                            </h5>
-                                            <small class="text-muted">
-                                                <span t-field="task.supplier_name"/>
-                                            </small>
-                                        </div>
+                                    <!-- Kanban View Style Cards for this bank -->
+                                    <div class="row o_portal_kanban">
+                                        <t t-foreach="tasks_by_bank[bank_name]" t-as="task">
+                                            <div class="col-md-6 col-lg-4 o_portal_kanban_card">
+                                                <div class="oe_kanban_card oe_kanban_global_click card"
+                                                     t-attf-style="border-left: 5px solid #{task.state == 'completed' and '#52c41a' or task.is_overdue and '#f5222d' or task.state == 'in_progress' and '#1890ff' or '#d9d9d9'}">
 
-                                        <!-- Card Body -->
-                                        <div class="card-body pt-2">
-                                            <!-- Receipt Amount -->
-                                            <div class="row mb-2">
-                                                <div class="col-6">
-                                                    <strong>Monto:</strong>
-                                                </div>
-                                                <div class="col-6 text-right">
-                                                    <span t-field="task.receipt_amount"
-                                                          t-options="{'widget': 'monetary', 'display_currency': task.receipt_currency_id}"/>
-                                                </div>
-                                            </div>
-
-                                            <!-- Receipt Date -->
-                                            <div class="row mb-2">
-                                                <div class="col-6">
-                                                    <strong>Fecha del Recibo:</strong>
-                                                </div>
-                                                <div class="col-6 text-right">
-                                                    <span t-field="task.receipt_date"/>
-                                                </div>
-                                            </div>
-
-                                            <!-- Deadline -->
-                                            <div class="row mb-2">
-                                                <div class="col-6">
-                                                    <strong>Fecha Límite:</strong>
-                                                </div>
-                                                <div class="col-6 text-right">
-                                                    <span t-field="task.deadline"
-                                                          t-attf-class="#{task.is_overdue and 'text-danger font-weight-bold' or ''}"/>
-                                                    <t t-if="task.days_remaining > 0">
+                                                    <!-- Card Header -->
+                                                    <div class="card-header pb-0">
+                                                        <h5 class="card-title mb-0">
+                                                            <span t-field="task.receipt_name"/>
+                                                        </h5>
                                                         <small class="text-muted">
-                                                            (<t t-esc="task.days_remaining"/> días)
+                                                            <span t-field="task.supplier_name"/>
                                                         </small>
-                                                    </t>
-                                                    <t t-elif="task.is_overdue">
-                                                        <span class="badge badge-danger">VENCIDO</span>
-                                                    </t>
+                                                    </div>
+
+                                                    <!-- Card Body -->
+                                                    <div class="card-body pt-2">
+                                                        <!-- Receipt Amount -->
+                                                        <div class="row mb-2">
+                                                            <div class="col-6">
+                                                                <strong>Monto:</strong>
+                                                            </div>
+                                                            <div class="col-6 text-right">
+                                                                <span t-field="task.receipt_amount"
+                                                                      t-options="{'widget': 'monetary', 'display_currency': task.receipt_currency_id}"/>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Receipt Date -->
+                                                        <div class="row mb-2">
+                                                            <div class="col-6">
+                                                                <strong>Fecha del Recibo:</strong>
+                                                            </div>
+                                                            <div class="col-6 text-right">
+                                                                <span t-field="task.receipt_date"/>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Deadline -->
+                                                        <div class="row mb-2">
+                                                            <div class="col-6">
+                                                                <strong>Fecha Límite:</strong>
+                                                            </div>
+                                                            <div class="col-6 text-right">
+                                                                <span t-field="task.deadline"
+                                                                      t-attf-class="#{task.is_overdue and 'text-danger font-weight-bold' or ''}"/>
+                                                                <t t-if="task.days_remaining > 0">
+                                                                    <small class="text-muted">
+                                                                        (<t t-esc="task.days_remaining"/> días)
+                                                                    </small>
+                                                                </t>
+                                                                <t t-elif="task.is_overdue">
+                                                                    <span class="badge badge-danger">VENCIDO</span>
+                                                                </t>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Status Badge -->
+                                                        <div class="row mb-3">
+                                                            <div class="col-12">
+                                                                <span t-attf-class="badge badge-#{task.state == 'completed' and 'success' or task.state == 'cancelled' and 'secondary' or task.state == 'in_progress' and 'primary' or 'warning'}">
+                                                                    <t t-esc="task.get_status_label()"/>
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Card Footer -->
+                                                    <div class="card-footer bg-transparent">
+                                                        <a t-attf-href="/my/payment-tasks/#{task.id}"
+                                                           class="btn btn-sm btn-primary">
+                                                            <i class="fa fa-arrow-right me-1"/> Ver Detalles
+                                                        </a>
+                                                    </div>
                                                 </div>
                                             </div>
-
-                                            <!-- Status Badge -->
-                                            <div class="row mb-3">
-                                                <div class="col-12">
-                                                    <span t-attf-class="badge badge-#{task.state == 'completed' and 'success' or task.state == 'cancelled' and 'secondary' or task.state == 'in_progress' and 'primary' or 'warning'}">
-                                                        <t t-esc="task.get_status_label()"/>
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Card Footer -->
-                                        <div class="card-footer bg-transparent">
-                                            <a t-attf-href="/my/payment-tasks/#{task.id}"
-                                               class="btn btn-sm btn-primary">
-                                                <i class="fa fa-arrow-right me-1"/> Ver Detalles
-                                            </a>
-                                        </div>
+                                        </t>
                                     </div>
                                 </div>
                             </t>
-                        </div>
+                        </t>
+                        <t t-else="">
+                            <!-- Ungrouped view - all tasks in one list -->
+                            <div class="row o_portal_kanban">
+                                <t t-foreach="payment_tasks" t-as="task">
+                                    <div class="col-md-6 col-lg-4 o_portal_kanban_card">
+                                        <div class="oe_kanban_card oe_kanban_global_click card"
+                                             t-attf-style="border-left: 5px solid #{task.state == 'completed' and '#52c41a' or task.is_overdue and '#f5222d' or task.state == 'in_progress' and '#1890ff' or '#d9d9d9'}">
+
+                                            <!-- Card Header -->
+                                            <div class="card-header pb-0">
+                                                <h5 class="card-title mb-0">
+                                                    <span t-field="task.receipt_name"/>
+                                                </h5>
+                                                <small class="text-muted">
+                                                    <span t-field="task.supplier_name"/>
+                                                </small>
+                                            </div>
+
+                                            <!-- Card Body -->
+                                            <div class="card-body pt-2">
+                                                <!-- Receipt Amount -->
+                                                <div class="row mb-2">
+                                                    <div class="col-6">
+                                                        <strong>Monto:</strong>
+                                                    </div>
+                                                    <div class="col-6 text-right">
+                                                        <span t-field="task.receipt_amount"
+                                                              t-options="{'widget': 'monetary', 'display_currency': task.receipt_currency_id}"/>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Receipt Date -->
+                                                <div class="row mb-2">
+                                                    <div class="col-6">
+                                                        <strong>Fecha del Recibo:</strong>
+                                                    </div>
+                                                    <div class="col-6 text-right">
+                                                        <span t-field="task.receipt_date"/>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Deadline -->
+                                                <div class="row mb-2">
+                                                    <div class="col-6">
+                                                        <strong>Fecha Límite:</strong>
+                                                    </div>
+                                                    <div class="col-6 text-right">
+                                                        <span t-field="task.deadline"
+                                                              t-attf-class="#{task.is_overdue and 'text-danger font-weight-bold' or ''}"/>
+                                                        <t t-if="task.days_remaining > 0">
+                                                            <small class="text-muted">
+                                                                (<t t-esc="task.days_remaining"/> días)
+                                                            </small>
+                                                        </t>
+                                                        <t t-elif="task.is_overdue">
+                                                            <span class="badge badge-danger">VENCIDO</span>
+                                                        </t>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Status Badge -->
+                                                <div class="row mb-3">
+                                                    <div class="col-12">
+                                                        <span t-attf-class="badge badge-#{task.state == 'completed' and 'success' or task.state == 'cancelled' and 'secondary' or task.state == 'in_progress' and 'primary' or 'warning'}">
+                                                            <t t-esc="task.get_status_label()"/>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Card Footer -->
+                                            <div class="card-footer bg-transparent">
+                                                <a t-attf-href="/my/payment-tasks/#{task.id}"
+                                                   class="btn btn-sm btn-primary">
+                                                    <i class="fa fa-arrow-right me-1"/> Ver Detalles
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </t>
+                            </div>
+                        </t>
                     </div>
                 </t>
             </t>
@@ -176,7 +286,7 @@
 
                     /* Página de Entrega - Estilos Empresariales Odoo */
                     .page-title-delivery {
-                        background: linear-gradient(135deg, #1f417e 0%, #155c9f 100%);
+                        background: linear-gradient(135deg, #178236 0%, #2da14f 100%);
                         color: white;
                         padding: 40px 30px;
                         margin: -1rem -15px 30px -15px;
@@ -228,7 +338,7 @@
                         box-shadow: 0 2px 8px rgba(0,0,0,0.08);
                         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                         overflow: hidden;
-                        border-top: 4px solid #1f417e;
+                        border-top: 4px solid #178236;
                     }
 
                     .delivery-card:hover {
@@ -237,7 +347,7 @@
                     }
 
                     .delivery-card .card-header {
-                        background: linear-gradient(135deg, #1f417e 0%, #155c9f 100%);
+                        background: linear-gradient(135deg, #178236 0%, #2da14f 100%);
                         color: white;
                         border: none;
                         padding: 18px 25px;
@@ -262,38 +372,38 @@
 
                     /* Dropzone empresarial */
                     .upload-dropzone {
-                        border: 2px dashed #1f417e;
+                        border: 2px dashed #178236;
                         border-radius: 10px;
                         padding: 35px 20px;
                         text-align: center;
-                        background: linear-gradient(135deg, rgba(31, 65, 126, 0.03) 0%, rgba(21, 92, 159, 0.03) 100%);
+                        background: linear-gradient(135deg, rgba(23, 130, 54, 0.03) 0%, rgba(45, 161, 79, 0.03) 100%);
                         transition: all 0.3s ease;
                         cursor: pointer;
                         position: relative;
                     }
 
                     .upload-dropzone:hover {
-                        border-color: #155c9f;
-                        background: linear-gradient(135deg, rgba(31, 65, 126, 0.08) 0%, rgba(21, 92, 159, 0.08) 100%);
+                        border-color: #2da14f;
+                        background: linear-gradient(135deg, rgba(23, 130, 54, 0.08) 0%, rgba(45, 161, 79, 0.08) 100%);
                         transform: translateY(-2px);
                     }
 
                     .upload-dropzone.drag-over {
-                        border-color: #155c9f;
-                        background: linear-gradient(135deg, rgba(31, 65, 126, 0.12) 0%, rgba(21, 92, 159, 0.12) 100%);
-                        box-shadow: inset 0 0 10px rgba(31, 65, 126, 0.1);
+                        border-color: #2da14f;
+                        background: linear-gradient(135deg, rgba(23, 130, 54, 0.12) 0%, rgba(45, 161, 79, 0.12) 100%);
+                        box-shadow: inset 0 0 10px rgba(23, 130, 54, 0.1);
                     }
 
                     .upload-dropzone i {
                         font-size: 3rem;
-                        color: #1f417e;
+                        color: #178236;
                         margin-bottom: 12px;
                         display: block;
                     }
 
                     .upload-dropzone p {
                         margin: 0;
-                        color: #1f417e;
+                        color: #178236;
                         font-weight: 600;
                         font-size: 1.05rem;
                     }
@@ -370,7 +480,7 @@
 
                     .alert-info-delivery strong {
                         font-weight: 700;
-                        color: #1f417e;
+                        color: #178236;
                     }
 
                     /* Botones empresariales */
@@ -380,19 +490,19 @@
                         font-weight: 700;
                         transition: all 0.2s ease;
                         border: none;
-                        box-shadow: 0 2px 8px rgba(31, 65, 126, 0.2);
+                        box-shadow: 0 2px 8px rgba(23, 130, 54, 0.2);
                         font-size: 0.95rem;
                         letter-spacing: 0.3px;
                     }
 
                     .btn-delivery:hover:not(:disabled) {
                         transform: translateY(-1px);
-                        box-shadow: 0 4px 12px rgba(31, 65, 126, 0.3);
+                        box-shadow: 0 4px 12px rgba(23, 130, 54, 0.3);
                     }
 
                     .btn-delivery:active:not(:disabled) {
                         transform: translateY(0);
-                        box-shadow: 0 2px 6px rgba(31, 65, 126, 0.2);
+                        box-shadow: 0 2px 6px rgba(23, 130, 54, 0.2);
                     }
 
                     .btn-delivery:disabled {
@@ -436,7 +546,7 @@
                     }
 
                     .info-row strong {
-                        color: #667eea;
+                        color: #178236;
                         font-weight: 600;
                     }
 
@@ -534,7 +644,7 @@
                                 <!-- Preview Container (initially hidden) -->
                                 <div id="preview_container" style="display: none; margin-top: 20px;">
                                     <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
-                                        <p style="margin: 0 0 15px 0; font-weight: 600; color: #1f417e;">Vista previa del archivo:</p>
+                                        <p style="margin: 0 0 15px 0; font-weight: 600; color: #178236;">Vista previa del archivo:</p>
                                         <img id="preview_image" style="max-width: 100%; max-height: 300px; border-radius: 8px; margin-bottom: 15px;"/>
                                         <p id="preview_filename" style="margin: 10px 0; font-size: 0.9rem; color: #666;"></p>
                                         <div style="display: flex; gap: 10px; margin-top: 15px;">

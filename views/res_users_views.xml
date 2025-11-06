@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-        <!-- Vista extendida de usuario para agregar campo de tareas de pago -->
-        <record id="view_users_form_inherit_payment_tasks" model="ir.ui.view">
-            <field name="name">res.users.form.inherit.payment.tasks</field>
+        <!-- Extend res.users form to add delivery task permissions -->
+        <record id="view_users_form_delivery_ext" model="ir.ui.view">
+            <field name="name">res.users.form.delivery_ext</field>
             <field name="model">res.users</field>
             <field name="inherit_id" ref="base.view_users_form"/>
             <field name="arch" type="xml">
-                <!-- Agregar el campo en la pestaña de Preferencias -->
-                <xpath expr="//page[@name='preferences']" position="inside">
-                    <group name="payment_tasks_group" string="Tareas de Recibo de Pago">
-                        <field name="is_payment_user" string="Es Usuario de Tareas de Pago"/>
+                <!-- Add our custom field to the Access Rights page -->
+                <xpath expr="//page[@name='access_rights']" position="inside">
+                    <group string="Tareas de Recibo de Pago" name="delivery_tasks">
+                        <field name="is_payment_user"
+                               help="Permitir que este usuario de portal vea y complete tareas de entrega de recibos de pago"/>
                     </group>
                 </xpath>
             </field>

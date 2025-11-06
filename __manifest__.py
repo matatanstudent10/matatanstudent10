@@ -29,7 +29,7 @@
         - portal: For portal user support
     """,
 
-    'author': "Jaime león",
+    'author': "Empaquetaduras y Empaques S.A.",
     'website': "https://www.empaquetadurasyempaques.com",
 
     'category': 'receipt',
@@ -49,6 +49,7 @@
         'security/ir.model.access.csv',
         'views/payment_task_views.xml',
         'views/supplier_payment_receipt_views.xml',
+        'views/res_users_views.xml',
         'wizard/assign_task_wizard_views.xml',
         'views/portal_menu.xml',
         'views/portal_templates.xml',

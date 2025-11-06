@@ -1,28 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data noupdate="1">
-        <!-- Security Groups -->
-
-        <!-- Payment User: Read-only access, can complete assigned tasks -->
-        <record id="group_payment_user" model="res.groups">
-            <field name="name">Payment Receipt User</field>
-            <field name="comment">Can view and work on assigned payment receipt tasks</field>
-        </record>
-
-        <!-- Payment Manager: Full access to create, edit, and assign payment tasks -->
-        <record id="group_payment_manager" model="res.groups">
-            <field name="name">Payment Receipt Manager</field>
-            <field name="implied_ids" eval="[(4, ref('group_payment_user'))]"/>
-            <field name="comment">Can create, edit, assign and complete payment receipt tasks</field>
-        </record>
-
         <!-- Record Rules: Restrict access based on assignment -->
 
-        <!-- PaymentTask: Users can only see tasks assigned to them -->
+        <!-- PaymentTask: Users from supplier_payment_receipts.user_treasury_financial can only see tasks assigned to them -->
         <record id="payment_task_portal_user_rule" model="ir.rule">
             <field name="name">PaymentTask - Portal User sees only assigned</field>
             <field name="model_id" ref="model_delivery_expenses_payment_task"/>
-            <field name="groups" eval="[(4, ref('group_payment_user'))]"/>
+            <field name="groups" eval="[(4, ref('supplier_payment_receipts.user_treasury_financial'))]"/>
             <field name="domain_force">[('assigned_user_id.user_ids', 'in', [user.id])]</field>
             <field name="perm_read">True</field>
             <field name="perm_write">False</field>
@@ -30,11 +15,11 @@
             <field name="perm_unlink">False</field>
         </record>
 
-        <!-- PaymentTask: Managers can see all tasks -->
+        <!-- PaymentTask: Managers from supplier_payment_receipts.admin_treasury_financial can see all tasks -->
         <record id="payment_task_manager_rule" model="ir.rule">
             <field name="name">PaymentTask - Manager sees all</field>
             <field name="model_id" ref="model_delivery_expenses_payment_task"/>
-            <field name="groups" eval="[(4, ref('group_payment_manager'))]"/>
+            <field name="groups" eval="[(4, ref('supplier_payment_receipts.admin_treasury_financial'))]"/>
             <field name="domain_force">[(1, '=', 1)]</field>
             <field name="perm_read">True</field>
             <field name="perm_write">True</field>
@@ -46,7 +31,7 @@
         <record id="payment_receipt_file_portal_user_rule" model="ir.rule">
             <field name="name">PaymentReceiptFile - Portal User sees own uploads</field>
             <field name="model_id" ref="model_delivery_expenses_payment_receipt_file"/>
-            <field name="groups" eval="[(4, ref('group_payment_user'))]"/>
+            <field name="groups" eval="[(4, ref('supplier_payment_receipts.user_treasury_financial'))]"/>
             <field name="domain_force">[('uploaded_by', '=', user.partner_id.id)]</field>
             <field name="perm_read">True</field>
             <field name="perm_write">False</field>
@@ -58,35 +43,11 @@
         <record id="payment_receipt_file_manager_rule" model="ir.rule">
             <field name="name">PaymentReceiptFile - Manager sees all</field>
             <field name="model_id" ref="model_delivery_expenses_payment_receipt_file"/>
-            <field name="groups" eval="[(4, ref('group_payment_manager'))]"/>
+            <field name="groups" eval="[(4, ref('supplier_payment_receipts.admin_treasury_financial'))]"/>
             <field name="domain_force">[(1, '=', 1)]</field>
             <field name="perm_read">True</field>
             <field name="perm_write">True</field>
             <field name="perm_create">True</field>
-            <field name="perm_unlink">False</field>
-        </record>
-
-        <!-- SupplierPaymentReceipt: Portal Users can read all receipts (restricted by payment_task assignment) -->
-        <record id="supplier_payment_receipt_portal_user_rule" model="ir.rule">
-            <field name="name">SupplierPaymentReceipt - Portal User reads all</field>
-            <field name="model_id" ref="supplier_payment_receipts.model_supplier_payment_receipt"/>
-            <field name="groups" eval="[(4, ref('group_payment_user'))]"/>
-            <field name="domain_force">[(1, '=', 1)]</field>
-            <field name="perm_read">True</field>
-            <field name="perm_write">False</field>
-            <field name="perm_create">False</field>
-            <field name="perm_unlink">False</field>
-        </record>
-
-        <!-- SupplierPaymentReceipt: Managers can read all receipts -->
-        <record id="supplier_payment_receipt_manager_rule" model="ir.rule">
-            <field name="name">SupplierPaymentReceipt - Manager reads all</field>
-            <field name="model_id" ref="supplier_payment_receipts.model_supplier_payment_receipt"/>
-            <field name="groups" eval="[(4, ref('group_payment_manager'))]"/>
-            <field name="domain_force">[(1, '=', 1)]</field>
-            <field name="perm_read">True</field>
-            <field name="perm_write">False</field>
-            <field name="perm_create">False</field>
             <field name="perm_unlink">False</field>
         </record>
 

@@ -83,22 +83,3 @@ class SupplierPaymentReceiptExt(models.Model):
                 }
             }
 
-    def action_change_task_assignee(self):
-        """Cambiar el repartidor de la tarea activa"""
-        self.ensure_one()
-        if not self.active_payment_task_id:
-            raise MissingError('No hay tarea activa para cambiar el repartidor')
-
-        task = self.active_payment_task_id
-
-        return {
-            'type': 'ir.actions.act_window',
-            'res_model': 'delivery_expenses.payment_task',
-            'res_id': task.id,
-            'view_mode': 'form',
-            'target': 'current',
-            'context': {
-                'edit': 'assigned_user_id',  # Focus on assigned_user_id field
-            }
-        }
-

@@ -47,21 +47,19 @@ class PaymentReceiptPortal(CustomerPortal):
         domain = [('assigned_user_id', '=', partner.id)]
 
         # Get filter parameter
-        filterby = kwargs.get('filterby', 'draft_in_progress')
+        filterby = kwargs.get('filterby', 'in_progress')
 
         # Apply filters from request
         if filterby == 'all':
             # Show all tasks
             pass
-        elif filterby == 'draft':
-            domain.append(('state', '=', 'draft'))
         elif filterby == 'in_progress':
             domain.append(('state', '=', 'in_progress'))
         elif filterby == 'completed':
             domain.append(('state', '=', 'completed'))
         else:
-            # Default: show draft and in_progress (non-completed)
-            domain.append(('state', 'in', ['draft', 'in_progress']))
+            # Default: show in_progress (non-completed)
+            domain.append(('state', 'in', ['in_progress']))
 
         # Search term
         if kwargs.get('search'):
@@ -83,7 +81,7 @@ class PaymentReceiptPortal(CustomerPortal):
         payment_task_count = PaymentTask.search_count(domain)
         pager = portal_pager(
             url="/my/payment-tasks",
-            url_args={'sortby': sortby, 'filterby': filterby} if sortby or filterby else None,
+            url_args={'sortby': sortby, 'filterby': filterby, 'group_by': kwargs.get('group_by')} if sortby or filterby else None,
             total=payment_task_count,
             page=page,
             step=10,  # Tasks per page
@@ -98,8 +96,35 @@ class PaymentReceiptPortal(CustomerPortal):
             offset=offset
         )
 
+        # Get grouping parameter
+        group_by = kwargs.get('group_by', 'none')
+
+        # Get all available banks from user's tasks for the dropdown
+        all_tasks_for_banks = PaymentTask.search(
+            [('assigned_user_id', '=', partner.id)],
+            order='deadline asc'
+        )
+        available_banks = sorted(set(
+            task.bank_name for task in all_tasks_for_banks if task.bank_name
+        ))
+
+        # Group tasks by bank if requested
+        tasks_by_bank = {}
+        if group_by == 'bank':
+            for task in payment_tasks:
+                bank = task.bank_name or 'Sin banco asignado'
+                if bank not in tasks_by_bank:
+                    tasks_by_bank[bank] = []
+                tasks_by_bank[bank].append(task)
+        else:
+            # No grouping - all tasks in one group
+            tasks_by_bank = {'all': payment_tasks}
+
         values = {
             'payment_tasks': payment_tasks,
+            'tasks_by_bank': tasks_by_bank,
+            'available_banks': available_banks,
+            'group_by': group_by,
             'payment_task_count': payment_task_count,
             'pager': pager,
             'sortby': sortby,
@@ -108,7 +133,6 @@ class PaymentReceiptPortal(CustomerPortal):
             # NO usar page_name - causaba breadcrumb a /task
             'searchbar_filters': {
                 'all': {'label': 'Todas', 'domain': []},
-                'draft': {'label': 'En Borrador', 'domain': [('state', '=', 'draft')]},
                 'in_progress': {'label': 'En Progreso', 'domain': [('state', '=', 'in_progress')]},
                 'completed': {'label': 'Completadas', 'domain': [('state', '=', 'completed')]},
             },
