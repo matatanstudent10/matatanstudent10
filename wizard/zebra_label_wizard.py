@@ -28,24 +28,10 @@ class ZebraLabelWizard(models.TransientModel):
             'custom': 'label_picking.action_report_zebra_label_custom',
         }
 
-        # Dimensiones según modelo
-        dimensions_map = {
-            'zd230': {'width': '102mm', 'height': '152mm'},
-            'zt411': {'width': '102mm', 'height': '152mm'},
-            'custom': {'width': '80mm', 'height': '100mm'},
-        }
-
         report_ref = report_map.get(self.printer_model, 'label_picking.action_report_zebra_label')
-        dimensions = dimensions_map.get(self.printer_model, {'width': '102mm', 'height': '152mm'})
 
-        # Preparar data para el reporte
-        data = {
-            'num_packages': self.num_packages,
-            'docids': [self.picking_id.id],
-            'label_width': dimensions['width'],
-            'label_height': dimensions['height'],
-        }
+        # Duplicar el picking N veces según num_packages para generar N etiquetas
+        picking_ids = [self.picking_id.id] * self.num_packages
 
-        return self.env.ref(report_ref).report_action(
-            self.picking_id.ids, data=data
-        )
+        # Retornar reporte con los datos correctos
+        return self.env.ref(report_ref).report_action(picking_ids)
