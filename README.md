@@ -1,7 +1,7 @@
 # 👋🏻 ¡Hola! Soy **Jaime León**  
 
 🚀 Técnico en Desarrollo de Software del **Instituto CENSA**  
-🖥️ Desarrollador con experiencia en **Odoo 15 y 17**, creación de módulos, reportes e integraciones.  
+🖥️ Desarrollador con experiencia en **Odoo**, creación de módulos, reportes e integraciones.  
 💡 Apasionado por la **ciberseguridad**, fanático amateur de **Kali Linux**, y amante del aprendizaje constante.  
 📡 Interesado en **Telecomunicaciones**, **Linux Bash** y el desarrollo con tecnologías modernas.  
 
